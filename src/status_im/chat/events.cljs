@@ -159,7 +159,7 @@
                       messages)))))
 
 (defn- init-console-chat
-  [{:keys [chats] :accounts/keys [current-account-id] :as db} existing-account?]
+  [{:keys [chats] :accounts/keys [current-account-id] :as db}]
   (if (chats const/console-chat-id)
     {:db db}
     (cond-> {:db (-> db
@@ -171,16 +171,13 @@
              :save-all-contacts [sign-up/console-contact]}
 
       (not current-account-id)
-      (update :dispatch-n concat sign-up/intro-events)
-
-      existing-account?
-      (update :dispatch-n concat sign-up/start-signup-events))))
+      (update :dispatch-n concat sign-up/intro-events))))
 
 (handlers/register-handler-fx
   :init-console-chat
   [(re-frame/inject-cofx :get-local-storage-data)]
   (fn [{:keys [db] :as cofx} _]
-    (let [fx (init-console-chat db false)]
+    (let [fx (init-console-chat db)]
       (loading-events/load-commands cofx fx sign-up/console-contact))))
 
 (handlers/register-handler-fx
@@ -204,7 +201,7 @@
               (assoc-in [:message-data :preview] message-previews)
               (assoc :handler-data (handler-data/get-all))
               (assoc :chats chats)
-              (init-console-chat true)
+              init-console-chat
               (update :dispatch-n conj event)))))))
 
 (handlers/register-handler-fx
@@ -218,7 +215,7 @@
                                       [chat-id (merge prev-chat updated-chat)])))
                              (into {}))]
       (-> (assoc db :chats updated-chats)
-          (init-console-chat true)))))
+          init-console-chat))))
 
 (handlers/register-handler-fx
   :send-seen!

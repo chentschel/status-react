@@ -5,6 +5,7 @@
     [re-frame.core :refer [dispatch reg-fx]]
     [status-im.utils.handlers :refer [register-handler-db register-handler-fx]]
     [taoensso.timbre :as log]
+    [status-im.chat.sign-up :as sign-up]
     [status-im.utils.types :refer [json->clj]]
     [status-im.data-store.core :as data-store]
     [status-im.native-module.core :as status]
@@ -124,8 +125,9 @@
                       [:set-current-account address]
                       [:initialize-account address]]
                      (if new-account?
-                       [[:navigate-to-clean :chat-list]
-                        [:navigate-to-chat console-chat-id]]
+                       (into [[:navigate-to-clean :chat-list]
+                              [:navigate-to-chat console-chat-id]]
+                             sign-up/start-signup-events) 
                        [[:navigate-to-clean :chat-list]
                         [:navigate-to :chat-list]]))}
       (log/debug "Error changing acount: " error))))

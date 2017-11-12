@@ -34,8 +34,7 @@
   (get accounts current-account-id))
 
 (defn- lookup-response-ref
-  [access-scope->commands-responses account chat contacts response-name]
-  (log/debug (str "account: " account))
+  [access-scope->commands-responses account chat contacts response-name] 
   (->> response-name
        (get (commands-model/commands-responses :response access-scope->commands-responses account chat contacts))
        :ref))
@@ -89,10 +88,7 @@
           (update :dispatch-n conj [:request-command-preview enriched-message])
 
           command-request?
-          (update :dispatch-n conj [:add-request chat-identifier enriched-message])
-          ;; TODO(janherich) this shouldn't be dispatch, but plain function call, refactor after adding requests is refactored
-          true
-          (update :dispatch-n conj [:update-suggestions])))
+          (update :dispatch-n conj [:add-request chat-identifier enriched-message])))
       {:db db})))
 
 (def ^:private receive-interceptors

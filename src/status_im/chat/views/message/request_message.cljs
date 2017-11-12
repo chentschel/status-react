@@ -73,8 +73,7 @@
 
 (defview message-content-command-request
   [{:keys [message-id chat-id content from incoming-group] :as message}]
-  (letsubs [command             [:get-command (:content-command-ref content)]
-            requests            [:chat-actions :possible-requests]
+  (letsubs [command             [:get-command (:content-command-ref content)] 
             answered?           [:is-request-answered? message-id]
             status-initialized? [:get :status-module-initialized?]
             markup              [:get-message-preview message-id]]

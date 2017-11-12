@@ -124,7 +124,7 @@
   (letsubs [command [:get-command (:content-command-ref content)]
             current-chat-id [:get-current-chat-id]
             contact-chat [:get-in [:chats (if outgoing to from)]]
-            preview [:get-message-preview message-id]]
+            preview [:get-message-preview message-id]] 
     (let [{:keys     [name type]
            icon-path :icon} command] 
       [view st/content-command-view

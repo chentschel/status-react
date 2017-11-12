@@ -32,46 +32,11 @@
             {}
             (cons global-access-scope member-access-scopes))))
 
-(def ^:private map->sorted-seq (comp (partial map second) (partial sort-by first)))
-
-(defn commands-for-chat
-  "Returns sorted list of commands eligible for current chat."
-  [access-scope->commands-responses account chat contacts]
-  (map->sorted-seq (commands-responses :command access-scope->commands-responses account chat contacts)))
-
-(defn- requested-responses
+(defn requested-responses
   "Returns map of requested command responses eligible for current chat."
   [access-scope->commands-responses account chat contacts requests]
   (let [requested-responses (map (comp name :type) requests)
         responses-map (commands-responses :response access-scope->commands-responses account chat contacts)]
     (select-keys responses-map requested-responses)))
 
-(defn responses-for-chat
-  "Returns sorted list of requested command responses eligible for current chat."
-  [access-scope->commands-responses account chat contacts requests]
-  (map->sorted-seq (requested-responses access-scope->commands-responses account chat contacts requests)))
 
-(defn commands-responses-for-chat
-  "Returns sorted list of commands and requested command responses eligible for current chat."
-  [access-scope->commands-responses account chat contacts requests]
-  (let [commands-map (commands-responses :command access-scope->commands-responses account chat contacts)
-        responses-map (requested-responses access-scope->commands-responses account chat contacts requests)]
-    (map->sorted-seq (merge commands-map responses-map))))
-
-(defn- commands-list->map [commands]
-  (->> commands
-       (map #(vector (:name %) %))
-       (into {})))
-
-(defn replace-name-with-request
-  "Sets the information about command for a specified request."
-  ([{:keys [content] :as message} commands requests]
-   (if (map? content)
-     (let [{:keys [command content-command]} content
-           commands (commands-list->map commands)
-           requests (commands-list->map requests)]
-       (assoc content :command (or (get requests (or content-command command))
-                                   (get commands command))))
-     content))
-  ([message commands]
-   (replace-name-with-request message commands [])))

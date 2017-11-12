@@ -46,33 +46,6 @@
 
 ;;;; Helper functions
 
-(defn- extract-command-request-owners [commands requests]
-  [commands requests]
-  (into #{} (keep :owner-id) (concat commands requests)))
-
-(defn update-suggestions
-  "Update suggestions for current chat input, takes db as the only argument
-  and returns new db with up-to date suggestions"
-  [{:keys [chats current-chat-id access-scope->commands-responses]
-    :contacts/keys [contacts]
-    :accounts/keys [accounts current-account-id] :as db}]
-  (let [account         (get accounts current-account-id)
-        chat            (get chats current-chat-id)
-        chat-text       (str/trim (or (:input-text chat) ""))
-        requests        (:requests chat)
-        responses       (commands-model/responses-for-chat access-scope->commands-responses account chat contacts requests)
-        commands        (commands-model/commands-for-chat access-scope->commands-responses account chat contacts)
-        {:keys [dapp?]} (get contacts current-chat-id)
-        ;; TODO(janherich) surely there is a better place to merge in possible commands/request/subscriptions into current chat
-        ;; then in `:update-suggestions` which is called whenever commands for chat are loaded, chat view is opened
-        ;; or new message is received from network - it's unnecessary to call it as a response to last two events
-        new-db          (cond-> (update-in db [:chats current-chat-id] merge {:possible-commands commands
-                                                                              :possible-requests responses})
-                          (and dapp?
-                               (str/blank? chat-text))
-                          (assoc-in [:chats current-chat-id :parameter-boxes :message] nil))]
-    new-db))
-
 (defn set-chat-input-text
   "Set input text for current-chat and updates suggestions relevant to current input.
   Takes db, input text and `:append?` flag as arguments and returns new db.
@@ -141,10 +114,8 @@
                               (input-model/join-command-args command-args)
                               (when (and move-to-next?
                                          (= index (dec (count command-args))))
-                                const/spacing-char))]
-        (-> db
-            (set-chat-input-text input-text)
-            update-suggestions)))))
+                                const/spacing-char))] 
+        (set-chat-input-text db input-text)))))
 
 (defn load-chat-parameter-box
   "Returns fx for loading chat parameter box for active chat"
@@ -391,11 +362,6 @@
     (when-let [cmp-ref (get-in chat-ui-props [current-chat-id ref])]
       {::blur-rn-component cmp-ref})))
 
-(handlers/register-handler-db
-  :update-suggestions
-  (fn [db _]
-    (update-suggestions db)))
-
 (handlers/register-handler-fx
   :load-chat-parameter-box
   [re-frame/trim-v]
@@ -445,8 +411,7 @@
              clear-seq-arguments
              (set-chat-input-metadata nil)
              (set-chat-input-text nil)
-             (model/set-chat-ui-props {:sending-in-progress? false})
-             update-suggestions)
+             (model/set-chat-ui-props {:sending-in-progress? false}))
      ;; TODO: refactor send-message.cljs to use atomic pure handlers and get rid of this dispatch
      :dispatch [:check-commands-handlers! {:message (get-in db [:chats current-chat-id :input-text])
                                            :command  command-message
@@ -500,8 +465,7 @@
           {:db db}
           {:db (-> db
                    (set-chat-input-metadata nil)
-                   (set-chat-input-text nil)
-                   update-suggestions)
+                   (set-chat-input-text nil))
            ;; TODO: refactor send-message.cljs to use atomic pure handlers and get rid of this dispatch
            :dispatch [:prepare-message {:message  input-text
                                         :chat-id  current-chat-id
@@ -588,5 +552,4 @@
   (fn [db _]
     (-> db
         (model/toggle-chat-ui-prop :show-suggestions?)
-        (model/set-chat-ui-props {:validation-messages nil})
-        update-suggestions)))
+        (model/set-chat-ui-props {:validation-messages nil}))))

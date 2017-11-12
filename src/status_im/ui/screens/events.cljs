@@ -7,6 +7,8 @@
             status-im.network.handlers
             status-im.protocol.handlers
             status-im.ui.screens.accounts.events
+            status-im.ui.screens.accounts.login.events
+            status-im.ui.screens.accounts.recover.events
             status-im.ui.screens.contacts.events
             status-im.ui.screens.discover.events
             status-im.ui.screens.group.chat-settings.events

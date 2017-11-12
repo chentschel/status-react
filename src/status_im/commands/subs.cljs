@@ -9,5 +9,5 @@
 (reg-sub
   :get-command
   :<- [:get-contacts]
-  (fn [contacts [_ ref]]
-    (get-in contacts ref)))
+  (fn [contacts [_ ref]] 
+    (some->> ref (get-in contacts))))
